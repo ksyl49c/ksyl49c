@@ -85,7 +85,9 @@ export default function Operations() {
                   <span className="font-display text-lg text-ink-900">{r.label}</span>
                   <Badge tone={meta.tone}>{meta.label}</Badge>
                 </div>
-                <div className="text-xs text-ink-400 mb-1">{r.wing} &middot; {r.bedType} room</div>
+                <div className="text-xs text-ink-400 mb-1">
+                  {r.wing} &middot; Floor {r.floor} &middot; {r.bedType} room
+                </div>
                 <div className="text-[13px] text-ink-700 font-medium">{r.occupant ?? "No current occupant"}</div>
               </Card>
             );

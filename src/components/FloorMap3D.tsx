@@ -3,26 +3,22 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Html, Edges, Grid, ContactShadows } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
-import { HandHelping, User2, RotateCcw } from "lucide-react";
+import { HandHelping, User2, RotateCcw, Building2 } from "lucide-react";
 import clsx from "clsx";
-import type { Resident, StaffMember, Wing } from "../lib/mockData";
+import type { Resident, StaffMember, Floor } from "../lib/mockData";
+import {
+  wingZones,
+  toWorldX,
+  toWorldZ,
+  getFloorLayout,
+  getRoomCenterPct,
+  FLOOR_LABELS,
+  FLOOR_SHORT,
+  type RoomPlacement,
+} from "../lib/floorPlan";
 
-const SCENE_WIDTH = 22;
-const SCENE_DEPTH = 14;
-
-function toWorldX(pct: number) {
-  return (pct / 100 - 0.5) * SCENE_WIDTH;
-}
-function toWorldZ(pct: number) {
-  return (pct / 100 - 0.5) * SCENE_DEPTH;
-}
-
-const wingZones: { wing: Wing; left: number; top: number; width: number; height: number; floor: string; edge: string; label: string }[] = [
-  { wing: "Magnolia", left: 4, top: 22, width: 26, height: 46, floor: "#dfeada", edge: "#9dbd8f", label: "#2c4424" },
-  { wing: "Cedar", left: 32, top: 40, width: 20, height: 44, floor: "#fdf3d8", edge: "#f2cf6f", label: "#9c6a12" },
-  { wing: "Birchwood", left: 54, top: 10, width: 20, height: 58, floor: "#e7f1f7", edge: "#a9cbe0", label: "#3d7297" },
-  { wing: "Willow", left: 76, top: 18, width: 20, height: 58, floor: "#fdece3", edge: "#f3b892", label: "#9c4d22" },
-];
+const GROUND_WIDTH = 32;
+const GROUND_DEPTH = 24;
 
 const staffStatusHex: Record<StaffMember["status"], string> = {
   available: "#5a8548",
@@ -30,6 +26,12 @@ const staffStatusHex: Record<StaffMember["status"], string> = {
   break: "#93a199",
   handover: "#d9a52a",
   overloaded: "#c2622b",
+};
+
+const roomStatusFloorHex: Record<string, string> = {
+  "vacant-ready": "#e7f1f7",
+  "vacant-turnover": "#fdf3d8",
+  maintenance: "#dde3de",
 };
 
 function PulseRing({ color, radius = 0.42 }: { color: string; radius?: number }) {
@@ -60,51 +62,110 @@ function SelectRing({ radius = 0.55 }: { radius?: number }) {
   );
 }
 
-function WingPad({ zone }: { zone: (typeof wingZones)[number] }) {
+function WingLabel({ zone }: { zone: (typeof wingZones)[number] }) {
   const x1 = toWorldX(zone.left);
-  const x2 = toWorldX(zone.left + zone.width);
   const z1 = toWorldZ(zone.top);
-  const z2 = toWorldZ(zone.top + zone.height);
+  return (
+    <Html position={[x1 + 0.1, 0.55, z1 + 0.1]} style={{ pointerEvents: "none" }} zIndexRange={[11, 0]}>
+      <div className="whitespace-nowrap text-[12px] font-bold uppercase tracking-wider -translate-y-1/2" style={{ color: zone.label }}>
+        {zone.wing}
+      </div>
+    </Html>
+  );
+}
+
+// A single room: floor plate, three walls (south side left open as the doorway), and
+// simple bed + nightstand furniture for occupied rooms.
+function RoomBox({ placement, wingEdge, wingFloorColor }: { placement: RoomPlacement; wingEdge: string; wingFloorColor: string }) {
+  const { room, rectPct } = placement;
+  const x1 = toWorldX(rectPct.left);
+  const x2 = toWorldX(rectPct.left + rectPct.width);
+  const z1 = toWorldZ(rectPct.top);
+  const z2 = toWorldZ(rectPct.top + rectPct.height);
   const width = x2 - x1;
   const depth = z2 - z1;
   const centerX = (x1 + x2) / 2;
   const centerZ = (z1 + z2) / 2;
+  const wallHeight = 0.82;
+  const wallThickness = 0.06;
+
+  const floorColor = room.status === "occupied" ? wingFloorColor : roomStatusFloorHex[room.status] ?? wingFloorColor;
+  const showBed = room.status === "occupied";
+
+  const bedWidth = Math.min(0.85, width * 0.5);
+  const bedDepth = Math.min(1.35, depth * 0.48);
+  const bedX = centerX - width * 0.14;
+  const bedZ = z1 + bedDepth / 2 + 0.14;
 
   return (
     <group>
-      <mesh receiveShadow position={[centerX, 0.06, centerZ]}>
-        <boxGeometry args={[width, 0.12, depth]} />
-        <meshStandardMaterial color={zone.floor} roughness={0.95} />
+      <mesh receiveShadow position={[centerX, 0.05, centerZ]}>
+        <boxGeometry args={[width, 0.1, depth]} />
+        <meshStandardMaterial color={floorColor} roughness={0.95} />
         <Edges scale={1} threshold={15}>
-          <lineBasicMaterial color={zone.edge} linewidth={1.5} />
+          <lineBasicMaterial color={wingEdge} />
         </Edges>
       </mesh>
-      <Html position={[x1 + 0.35, 0.15, z1 + 0.35]} style={{ pointerEvents: "none" }} zIndexRange={[10, 0]}>
-        <div
-          className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wider -translate-y-1/2"
-          style={{ color: zone.label }}
-        >
-          {zone.wing}
-        </div>
-      </Html>
+
+      <mesh castShadow receiveShadow position={[centerX, wallHeight / 2 + 0.1, z1]}>
+        <boxGeometry args={[width, wallHeight, wallThickness]} />
+        <meshStandardMaterial color={wingEdge} roughness={0.85} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[x1, wallHeight / 2 + 0.1, centerZ]}>
+        <boxGeometry args={[wallThickness, wallHeight, depth]} />
+        <meshStandardMaterial color={wingEdge} roughness={0.85} />
+      </mesh>
+      <mesh castShadow receiveShadow position={[x2, wallHeight / 2 + 0.1, centerZ]}>
+        <boxGeometry args={[wallThickness, wallHeight, depth]} />
+        <meshStandardMaterial color={wingEdge} roughness={0.85} />
+      </mesh>
+
+      {showBed && (
+        <group position={[bedX, 0, bedZ]}>
+          <mesh castShadow receiveShadow position={[0, 0.21, 0]}>
+            <boxGeometry args={[bedWidth, 0.22, bedDepth]} />
+            <meshStandardMaterial color="#9dbd8f" roughness={0.8} />
+          </mesh>
+          <mesh castShadow position={[0, 0.31, -bedDepth / 2]}>
+            <boxGeometry args={[bedWidth, 0.42, 0.05]} />
+            <meshStandardMaterial color="#b08968" roughness={0.7} />
+          </mesh>
+          <mesh castShadow position={[0, 0.36, -bedDepth * 0.32]}>
+            <boxGeometry args={[bedWidth * 0.75, 0.08, bedDepth * 0.28]} />
+            <meshStandardMaterial color="#fdfcf9" roughness={0.9} />
+          </mesh>
+          <mesh castShadow receiveShadow position={[bedWidth / 2 + 0.19, 0.16, -bedDepth / 2 + 0.14]}>
+            <boxGeometry args={[0.28, 0.32, 0.28]} />
+            <meshStandardMaterial color="#c8a27a" roughness={0.75} />
+          </mesh>
+        </group>
+      )}
+
+      {!room.isFiller && (
+        <Html position={[x1 + 0.12, 0.12, z2 - 0.12]} style={{ pointerEvents: "none" }} zIndexRange={[8, 0]}>
+          <div className="whitespace-nowrap text-[8px] font-semibold uppercase tracking-wide text-ink-400/80 bg-white/70 rounded px-1">
+            {room.label}
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
 
 function ResidentMarker({
   resident,
+  worldPos,
   selected,
   onSelect,
 }: {
   resident: Resident;
+  worldPos: [number, number];
   selected: boolean;
   onSelect: (id: string, kind: "resident" | "staff") => void;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
-  const worldX = toWorldX(resident.x);
-  const worldZ = toWorldZ(resident.y);
-  const phase = useMemo(() => worldX * 3.1, [worldX]);
+  const phase = useMemo(() => worldPos[0] * 3.1, [worldPos]);
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -114,7 +175,7 @@ function ResidentMarker({
   const color = resident.needsHelp ? "#d9645a" : resident.deteriorationRisk > 65 ? "#c2622b" : "#6b7b70";
 
   return (
-    <group position={[worldX, 0, worldZ]}>
+    <group position={[worldPos[0], 0, worldPos[1]]}>
       {resident.needsHelp && <PulseRing color="#d9645a" />}
       {selected && <SelectRing />}
       <group
@@ -240,16 +301,20 @@ function StaffMarker({
 }
 
 function SceneContents({
+  floor,
   residents,
   staffList,
   selectedId,
   onSelect,
 }: {
+  floor: Floor;
   residents: Resident[];
   staffList: StaffMember[];
   selectedId: string | null;
   onSelect: (id: string, kind: "resident" | "staff") => void;
 }) {
+  const layout = useMemo(() => getFloorLayout(floor), [floor]);
+
   return (
     <>
       <ambientLight intensity={0.65} color="#eef1ec" />
@@ -269,12 +334,12 @@ function SceneContents({
       <hemisphereLight args={["#f3ede0", "#38473e", 0.25]} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-        <planeGeometry args={[SCENE_WIDTH + 10, SCENE_DEPTH + 10]} />
+        <planeGeometry args={[GROUND_WIDTH, GROUND_DEPTH]} />
         <meshStandardMaterial color="#f3ede0" roughness={1} />
       </mesh>
       <Grid
         position={[0, 0, 0]}
-        args={[SCENE_WIDTH + 10, SCENE_DEPTH + 10]}
+        args={[GROUND_WIDTH, GROUND_DEPTH]}
         cellSize={1}
         cellThickness={0.4}
         cellColor="#dde3de"
@@ -288,18 +353,78 @@ function SceneContents({
       />
 
       {wingZones.map((z) => (
-        <WingPad key={z.wing} zone={z} />
+        <WingLabel key={z.wing} zone={z} />
       ))}
 
-      {residents.map((r) => (
-        <ResidentMarker key={r.id} resident={r} selected={selectedId === r.id} onSelect={onSelect} />
-      ))}
+      {layout.map((placement) => {
+        const zone = wingZones.find((z) => z.wing === placement.room.wing)!;
+        return <RoomBox key={placement.room.id} placement={placement} wingEdge={zone.edge} wingFloorColor={zone.floor} />;
+      })}
+
+      {residents.map((r) => {
+        const center = getRoomCenterPct(floor, r.room);
+        const worldPos: [number, number] = center ? [toWorldX(center.x), toWorldZ(center.y)] : [toWorldX(r.x), toWorldZ(r.y)];
+        return <ResidentMarker key={r.id} resident={r} worldPos={worldPos} selected={selectedId === r.id} onSelect={onSelect} />;
+      })}
       {staffList.map((s) => (
         <StaffMarker key={s.id} staffMember={s} selected={selectedId === s.id} onSelect={onSelect} />
       ))}
 
       <ContactShadows position={[0, 0.001, 0]} opacity={0.3} scale={30} blur={2.6} far={6} />
     </>
+  );
+}
+
+function Minimap({
+  activeFloor,
+  onChange,
+  floorStats,
+}: {
+  activeFloor: Floor;
+  onChange: (f: Floor) => void;
+  floorStats: Record<Floor, { residents: number; staff: number; alerts: number }>;
+}) {
+  const order: Floor[] = [3, 2, 1];
+  return (
+    <div className="absolute top-3 left-3 rounded-2xl bg-white/90 backdrop-blur px-2.5 py-2.5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center gap-1.5 px-1 mb-2 text-[10px] font-semibold uppercase tracking-wide text-ink-400">
+        <Building2 size={11} /> Building
+      </div>
+      <div className="flex flex-col-reverse gap-1">
+        {order
+          .slice()
+          .reverse()
+          .map((f) => {
+            const stats = floorStats[f];
+            const active = f === activeFloor;
+            return (
+              <button
+                key={f}
+                onClick={() => onChange(f)}
+                className={clsx(
+                  "relative flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors w-[124px]",
+                  active ? "bg-moss-600" : "bg-ink-100 hover:bg-ink-200"
+                )}
+              >
+                <span className={clsx("flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold", active ? "bg-white text-moss-700" : "bg-white text-ink-500")}>
+                  {FLOOR_SHORT[f]}
+                </span>
+                <span className={clsx("text-[11px] font-medium leading-tight", active ? "text-white" : "text-ink-600")}>
+                  {FLOOR_LABELS[f]}
+                </span>
+                {stats.alerts > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                    {stats.alerts}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+      </div>
+      <div className="mt-2 px-1 text-[10px] text-ink-400 leading-tight">
+        {floorStats[activeFloor].residents} residents &middot; {floorStats[activeFloor].staff} staff
+      </div>
+    </div>
   );
 }
 
@@ -315,18 +440,36 @@ export default function FloorMap3D({
   onSelect: (id: string, kind: "resident" | "staff") => void;
 }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
+  const [activeFloor, setActiveFloor] = useState<Floor>(1);
+
+  const floorStats = useMemo(() => {
+    const stats = {} as Record<Floor, { residents: number; staff: number; alerts: number }>;
+    ([1, 2, 3] as Floor[]).forEach((f) => {
+      const rOnFloor = residents.filter((r) => r.floor === f);
+      const sOnFloor = staffList.filter((s) => s.floor === f);
+      stats[f] = {
+        residents: rOnFloor.length,
+        staff: sOnFloor.length,
+        alerts: rOnFloor.filter((r) => r.needsHelp).length + sOnFloor.filter((s) => s.status === "overloaded").length,
+      };
+    });
+    return stats;
+  }, [residents, staffList]);
+
+  const floorResidents = useMemo(() => residents.filter((r) => r.floor === activeFloor), [residents, activeFloor]);
+  const floorStaff = useMemo(() => staffList.filter((s) => s.floor === activeFloor), [staffList, activeFloor]);
 
   return (
     <div className="relative w-full aspect-[16/10] overflow-hidden rounded-2xl bg-gradient-to-b from-ink-100 to-ink-50">
-      <Canvas shadows camera={{ position: [0, 15.5, 15.5], fov: 40 }} dpr={[1, 2]}>
-        <SceneContents residents={residents} staffList={staffList} selectedId={selectedId} onSelect={onSelect} />
+      <Canvas shadows camera={{ position: [0, 13, 13], fov: 42 }} dpr={[1, 2]}>
+        <SceneContents floor={activeFloor} residents={floorResidents} staffList={floorStaff} selectedId={selectedId} onSelect={onSelect} />
         <OrbitControls
           ref={controlsRef}
           makeDefault
           enableDamping
           dampingFactor={0.08}
-          minDistance={9}
-          maxDistance={26}
+          minDistance={6}
+          maxDistance={24}
           maxPolarAngle={1.15}
           minPolarAngle={0.35}
           enablePan={false}
@@ -335,6 +478,8 @@ export default function FloorMap3D({
           target={[0, 0, 0]}
         />
       </Canvas>
+
+      <Minimap activeFloor={activeFloor} onChange={setActiveFloor} floorStats={floorStats} />
 
       <button
         onClick={() => controlsRef.current?.reset()}
