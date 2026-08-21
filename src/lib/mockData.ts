@@ -38,27 +38,27 @@ export interface Resident {
 }
 
 export const staff: StaffMember[] = [
-  { id: "s1", name: "Amara Okafor", role: "RN", wing: "Magnolia", floor: 1, x: 22, y: 34, status: "with-resident", taskLoad: 68, hoursOnShift: 6.2, stepsToday: 8400, lastCoverageGapMin: 4, burnoutSignal: "none" },
-  { id: "s2", name: "Priya Nair", role: "RN", wing: "Birchwood", floor: 2, x: 61, y: 28, status: "overloaded", taskLoad: 94, hoursOnShift: 9.8, stepsToday: 13200, lastCoverageGapMin: 22, burnoutSignal: "elevated" },
-  { id: "s3", name: "Deshawn Marsh", role: "CNA", wing: "Birchwood", floor: 1, x: 68, y: 52, status: "available", taskLoad: 41, hoursOnShift: 3.1, stepsToday: 5100, lastCoverageGapMin: 1, burnoutSignal: "none" },
-  { id: "s4", name: "Lucia Fernandez", role: "LPN", wing: "Cedar", floor: 2, x: 40, y: 68, status: "handover", taskLoad: 55, hoursOnShift: 7.4, stepsToday: 9800, lastCoverageGapMin: 8, burnoutSignal: "watch" },
-  { id: "s5", name: "Grace Tan", role: "CNA", wing: "Willow", floor: 1, x: 82, y: 71, status: "with-resident", taskLoad: 62, hoursOnShift: 5.5, stepsToday: 7600, lastCoverageGapMin: 3, burnoutSignal: "none" },
-  { id: "s6", name: "Tobias Kraus", role: "Care Aide", wing: "Magnolia", floor: 3, x: 30, y: 55, status: "break", taskLoad: 30, hoursOnShift: 4.0, stepsToday: 4400, lastCoverageGapMin: 0, burnoutSignal: "none" },
-  { id: "s7", name: "Marisol Ibarra", role: "RN", wing: "Cedar", floor: 3, x: 47, y: 40, status: "available", taskLoad: 48, hoursOnShift: 2.6, stepsToday: 3900, lastCoverageGapMin: 2, burnoutSignal: "none" },
-  { id: "s8", name: "Femi Adeyemi", role: "LPN", wing: "Willow", floor: 2, x: 76, y: 30, status: "overloaded", taskLoad: 88, hoursOnShift: 10.4, stepsToday: 14100, lastCoverageGapMin: 31, burnoutSignal: "elevated" },
+  { id: "s1", name: "Amara Okafor", role: "RN", wing: "Magnolia", floor: 1, x: 17, y: 15, status: "with-resident", taskLoad: 68, hoursOnShift: 6.2, stepsToday: 8400, lastCoverageGapMin: 4, burnoutSignal: "none" },
+  { id: "s2", name: "Priya Nair", role: "RN", wing: "Birchwood", floor: 2, x: 58, y: 17, status: "overloaded", taskLoad: 94, hoursOnShift: 9.8, stepsToday: 13200, lastCoverageGapMin: 22, burnoutSignal: "elevated" },
+  { id: "s3", name: "Deshawn Marsh", role: "CNA", wing: "Birchwood", floor: 1, x: 65, y: 32, status: "available", taskLoad: 41, hoursOnShift: 3.1, stepsToday: 5100, lastCoverageGapMin: 1, burnoutSignal: "none" },
+  { id: "s4", name: "Lucia Fernandez", role: "LPN", wing: "Cedar", floor: 2, x: 35, y: 29, status: "handover", taskLoad: 55, hoursOnShift: 7.4, stepsToday: 9800, lastCoverageGapMin: 8, burnoutSignal: "watch" },
+  { id: "s5", name: "Grace Tan", role: "CNA", wing: "Willow", floor: 1, x: 81, y: 40, status: "with-resident", taskLoad: 62, hoursOnShift: 5.5, stepsToday: 7600, lastCoverageGapMin: 3, burnoutSignal: "none" },
+  { id: "s6", name: "Tobias Kraus", role: "Care Aide", wing: "Magnolia", floor: 3, x: 23, y: 32, status: "break", taskLoad: 30, hoursOnShift: 4.0, stepsToday: 4400, lastCoverageGapMin: 0, burnoutSignal: "none" },
+  { id: "s7", name: "Marisol Ibarra", role: "RN", wing: "Cedar", floor: 3, x: 43, y: 8, status: "available", taskLoad: 48, hoursOnShift: 2.6, stepsToday: 3900, lastCoverageGapMin: 2, burnoutSignal: "none" },
+  { id: "s8", name: "Femi Adeyemi", role: "LPN", wing: "Willow", floor: 2, x: 75, y: 13, status: "overloaded", taskLoad: 88, hoursOnShift: 10.4, stepsToday: 14100, lastCoverageGapMin: 31, burnoutSignal: "elevated" },
 ];
 
 export const residents: Resident[] = [
-  { id: "r1", name: "Eleanor Whitfield", age: 87, room: "M-104", wing: "Magnolia", floor: 1, x: 18, y: 40, careLevel: "Skilled Nursing", deteriorationRisk: 78, needsHelp: true, helpReason: "Call bell — pain reported 7/10", primaryConditions: ["CHF", "Stage 2 pressure injury"], photoInitials: "EW" },
-  { id: "r2", name: "Harold Jensen", age: 91, room: "M-112", wing: "Magnolia", floor: 2, x: 26, y: 46, careLevel: "Memory Care", deteriorationRisk: 34, needsHelp: false, primaryConditions: ["Dementia", "Type 2 diabetes"], photoInitials: "HJ" },
-  { id: "r3", name: "Beatrice Kim", age: 83, room: "B-201", wing: "Birchwood", floor: 1, x: 58, y: 22, careLevel: "Assisted", deteriorationRisk: 21, needsHelp: false, primaryConditions: ["Osteoarthritis"], photoInitials: "BK" },
-  { id: "r4", name: "Walter Nguyen", age: 89, room: "B-208", wing: "Birchwood", floor: 2, x: 66, y: 44, careLevel: "Skilled Nursing", deteriorationRisk: 61, needsHelp: false, primaryConditions: ["COPD", "Fall risk"], photoInitials: "WN" },
-  { id: "r5", name: "Josephine Ruiz", age: 85, room: "C-305", wing: "Cedar", floor: 2, x: 38, y: 62, careLevel: "Memory Care", deteriorationRisk: 45, needsHelp: true, helpReason: "Wandering detected near exit", primaryConditions: ["Dementia", "Anxiety"], photoInitials: "JR" },
-  { id: "r6", name: "Arthur Bell", age: 79, room: "C-312", wing: "Cedar", floor: 1, x: 45, y: 74, careLevel: "Independent", deteriorationRisk: 12, needsHelp: false, primaryConditions: ["Hypertension"], photoInitials: "AB" },
-  { id: "r7", name: "Margaret Osei", age: 93, room: "W-401", wing: "Willow", floor: 2, x: 80, y: 60, careLevel: "Skilled Nursing", deteriorationRisk: 82, needsHelp: false, primaryConditions: ["Post-hip-fracture", "UTI history"], photoInitials: "MO" },
-  { id: "r8", name: "Samuel Ortiz", age: 88, room: "W-408", wing: "Willow", floor: 1, x: 88, y: 42, careLevel: "Assisted", deteriorationRisk: 28, needsHelp: false, primaryConditions: ["Parkinson's"], photoInitials: "SO" },
-  { id: "r9", name: "Ingrid Solberg", age: 90, room: "M-118", wing: "Magnolia", floor: 3, x: 14, y: 62, careLevel: "Skilled Nursing", deteriorationRisk: 55, needsHelp: false, primaryConditions: ["CKD stage 3"], photoInitials: "IS" },
-  { id: "r10", name: "Percy Adjei", age: 84, room: "B-215", wing: "Birchwood", floor: 3, x: 72, y: 66, careLevel: "Assisted", deteriorationRisk: 19, needsHelp: false, primaryConditions: ["Glaucoma"], photoInitials: "PA" },
+  { id: "r1", name: "Eleanor Whitfield", age: 87, room: "M-104", wing: "Magnolia", floor: 1, x: 14, y: 20, careLevel: "Skilled Nursing", deteriorationRisk: 78, needsHelp: true, helpReason: "Call bell — pain reported 7/10", primaryConditions: ["CHF", "Stage 2 pressure injury"], photoInitials: "EW" },
+  { id: "r2", name: "Harold Jensen", age: 91, room: "M-112", wing: "Magnolia", floor: 2, x: 21, y: 25, careLevel: "Memory Care", deteriorationRisk: 34, needsHelp: false, primaryConditions: ["Dementia", "Type 2 diabetes"], photoInitials: "HJ" },
+  { id: "r3", name: "Beatrice Kim", age: 83, room: "B-201", wing: "Birchwood", floor: 1, x: 54, y: 14, careLevel: "Assisted", deteriorationRisk: 21, needsHelp: false, primaryConditions: ["Osteoarthritis"], photoInitials: "BK" },
+  { id: "r4", name: "Walter Nguyen", age: 89, room: "B-208", wing: "Birchwood", floor: 2, x: 63, y: 27, careLevel: "Skilled Nursing", deteriorationRisk: 61, needsHelp: false, primaryConditions: ["COPD", "Fall risk"], photoInitials: "WN" },
+  { id: "r5", name: "Josephine Ruiz", age: 85, room: "C-305", wing: "Cedar", floor: 2, x: 33, y: 24, careLevel: "Memory Care", deteriorationRisk: 45, needsHelp: true, helpReason: "Wandering detected near exit", primaryConditions: ["Dementia", "Anxiety"], photoInitials: "JR" },
+  { id: "r6", name: "Arthur Bell", age: 79, room: "C-312", wing: "Cedar", floor: 1, x: 40, y: 34, careLevel: "Independent", deteriorationRisk: 12, needsHelp: false, primaryConditions: ["Hypertension"], photoInitials: "AB" },
+  { id: "r7", name: "Margaret Osei", age: 93, room: "W-401", wing: "Willow", floor: 2, x: 78, y: 32, careLevel: "Skilled Nursing", deteriorationRisk: 82, needsHelp: false, primaryConditions: ["Post-hip-fracture", "UTI history"], photoInitials: "MO" },
+  { id: "r8", name: "Samuel Ortiz", age: 88, room: "W-408", wing: "Willow", floor: 1, x: 87, y: 21, careLevel: "Assisted", deteriorationRisk: 28, needsHelp: false, primaryConditions: ["Parkinson's"], photoInitials: "SO" },
+  { id: "r9", name: "Ingrid Solberg", age: 90, room: "M-118", wing: "Magnolia", floor: 3, x: 11, y: 37, careLevel: "Skilled Nursing", deteriorationRisk: 55, needsHelp: false, primaryConditions: ["CKD stage 3"], photoInitials: "IS" },
+  { id: "r10", name: "Percy Adjei", age: 84, room: "B-215", wing: "Birchwood", floor: 3, x: 70, y: 41, careLevel: "Assisted", deteriorationRisk: 19, needsHelp: false, primaryConditions: ["Glaucoma"], photoInitials: "PA" },
 ];
 
 export interface VitalPoint {

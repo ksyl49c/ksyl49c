@@ -8,7 +8,7 @@ import clsx from "clsx";
 import type { Resident, StaffMember, Wing } from "../lib/mockData";
 
 const SCENE_WIDTH = 22;
-const SCENE_DEPTH = 14;
+const SCENE_DEPTH = 15;
 
 function toWorldX(pct: number) {
   return (pct / 100 - 0.5) * SCENE_WIDTH;
@@ -17,11 +17,57 @@ function toWorldZ(pct: number) {
   return (pct / 100 - 0.5) * SCENE_DEPTH;
 }
 
-const wingZones: { wing: Wing; left: number; top: number; width: number; height: number; floor: string; edge: string; label: string }[] = [
-  { wing: "Magnolia", left: 4, top: 22, width: 26, height: 46, floor: "#dfeada", edge: "#9dbd8f", label: "#2c4424" },
-  { wing: "Cedar", left: 32, top: 40, width: 20, height: 44, floor: "#fdf3d8", edge: "#f2cf6f", label: "#9c6a12" },
-  { wing: "Birchwood", left: 54, top: 10, width: 20, height: 58, floor: "#e7f1f7", edge: "#a9cbe0", label: "#3d7297" },
-  { wing: "Willow", left: 76, top: 18, width: 20, height: 58, floor: "#fdece3", edge: "#f3b892", label: "#9c4d22" },
+interface ZoneDef {
+  key: string;
+  label: string;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  floor: string;
+  edge: string;
+  labelColor: string;
+}
+
+// Wards sit in a row across the top, connected by a single main corridor,
+// with kitchen and canteen service spaces below — a simplified single-corridor
+// nursing home floor plan rather than four disconnected pads.
+const wardZones: ZoneDef[] = [
+  { key: "Magnolia", label: "Magnolia", left: 2, top: 6, width: 22, height: 36, floor: "#dfeada", edge: "#9dbd8f", labelColor: "#2c4424" },
+  { key: "Cedar", label: "Cedar", left: 26, top: 6, width: 22, height: 36, floor: "#fdf3d8", edge: "#f2cf6f", labelColor: "#9c6a12" },
+  { key: "Birchwood", label: "Birchwood", left: 50, top: 6, width: 22, height: 36, floor: "#e7f1f7", edge: "#a9cbe0", labelColor: "#3d7297" },
+  { key: "Willow", label: "Willow", left: 74, top: 6, width: 22, height: 36, floor: "#fdece3", edge: "#f3b892", labelColor: "#9c4d22" },
+];
+
+const corridorZone: ZoneDef = {
+  key: "corridor",
+  label: "Main Corridor",
+  left: 2,
+  top: 44,
+  width: 94,
+  height: 12,
+  floor: "#ece7da",
+  edge: "#c9bfa3",
+  labelColor: "#6b7b70",
+};
+
+const serviceZones: ZoneDef[] = [
+  { key: "kitchen", label: "Kitchen", left: 2, top: 58, width: 45, height: 34, floor: "#ede2d3", edge: "#c9a97e", labelColor: "#7a5a34" },
+  { key: "canteen", label: "Canteen", left: 51, top: 58, width: 45, height: 34, floor: "#e6efe0", edge: "#a8c191", labelColor: "#3f5c2c" },
+];
+
+// Doorway between each ward and the corridor, keyed by wing so staff patrols
+// know which threshold to walk through.
+const wardDoorways: Record<Wing, { x: number; z: number }> = {
+  Magnolia: { x: 13, z: 42 },
+  Cedar: { x: 37, z: 42 },
+  Birchwood: { x: 61, z: 42 },
+  Willow: { x: 85, z: 42 },
+};
+
+const serviceDoorways: { x: number; z: number; rotationY: number }[] = [
+  { x: 24.5, z: 58, rotationY: Math.PI / 2 },
+  { x: 73.5, z: 58, rotationY: Math.PI / 2 },
 ];
 
 const staffStatusHex: Record<StaffMember["status"], string> = {
@@ -60,7 +106,24 @@ function SelectRing({ radius = 0.55 }: { radius?: number }) {
   );
 }
 
-function WingPad({ zone }: { zone: (typeof wingZones)[number] }) {
+// A classic floor-plan door symbol: a short leaf plus its quarter-circle swing arc.
+function DoorSwing({ x, z, rotationY = 0 }: { x: number; z: number; rotationY?: number }) {
+  const color = "#8a9187";
+  return (
+    <group position={[toWorldX(x), 0.14, toWorldZ(z)]} rotation={[0, rotationY, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.36, 0.4, 24, 1, 0, Math.PI / 2]} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} side={THREE.DoubleSide} depthWrite={false} />
+      </mesh>
+      <mesh position={[0.2, 0, 0]}>
+        <boxGeometry args={[0.4, 0.05, 0.035]} />
+        <meshStandardMaterial color={color} roughness={0.6} />
+      </mesh>
+    </group>
+  );
+}
+
+function ZonePad({ zone, showStripe = false, sublabel }: { zone: ZoneDef; showStripe?: boolean; sublabel?: string }) {
   const x1 = toWorldX(zone.left);
   const x2 = toWorldX(zone.left + zone.width);
   const z1 = toWorldZ(zone.top);
@@ -79,12 +142,22 @@ function WingPad({ zone }: { zone: (typeof wingZones)[number] }) {
           <lineBasicMaterial color={zone.edge} linewidth={1.5} />
         </Edges>
       </mesh>
+      {showStripe && (
+        <mesh position={[centerX, 0.13, centerZ]}>
+          <boxGeometry args={[width * 0.96, 0.01, depth * 0.12]} />
+          <meshStandardMaterial color="#9dbd8f" roughness={0.8} />
+        </mesh>
+      )}
       <Html position={[x1 + 0.35, 0.15, z1 + 0.35]} style={{ pointerEvents: "none" }} zIndexRange={[10, 0]}>
-        <div
-          className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wider -translate-y-1/2"
-          style={{ color: zone.label }}
-        >
-          {zone.wing}
+        <div className="-translate-y-1/2">
+          <div className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wider" style={{ color: zone.labelColor }}>
+            {zone.label}
+          </div>
+          {sublabel && (
+            <div className="whitespace-nowrap text-[8px] font-semibold uppercase tracking-wider opacity-60" style={{ color: zone.labelColor }}>
+              {sublabel}
+            </div>
+          )}
         </div>
       </Html>
     </group>
@@ -172,6 +245,43 @@ function ResidentMarker({
   );
 }
 
+// Deterministic pseudo-random float in [0,1) from a string seed, so each staff
+// member's patrol pattern is stable across re-renders.
+function seededFloat(seed: string): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return (h % 10000) / 10000;
+}
+
+function clamp(v: number, lo: number, hi: number) {
+  return Math.min(hi, Math.max(lo, v));
+}
+
+// A patrol loop that keeps a nurse mostly in her own ward but sends her out
+// through the doorway into the corridor and back — visiting a second spot in
+// the ward each time, mimicking rounds between residents.
+function buildStaffPatrol(staff: StaffMember): [number, number][] {
+  const ward = wardZones.find((w) => w.key === staff.wing);
+  const doorway = wardDoorways[staff.wing];
+  if (!ward || !doorway) return [[staff.x, staff.y]];
+
+  const seedB = seededFloat(staff.id + "b");
+  const pointA: [number, number] = [staff.x, staff.y];
+  const pointB: [number, number] = [
+    clamp(staff.x + (seedB - 0.5) * ward.width * 0.7, ward.left + 1.5, ward.left + ward.width - 1.5),
+    clamp(staff.y + (seedB - 0.5) * ward.height * 0.7, ward.top + 1.5, ward.top + ward.height - 1.5),
+  ];
+
+  const corridorMidZ = corridorZone.top + corridorZone.height / 2;
+  const corridorOffset = (seededFloat(staff.id + "c") - 0.5) * 6;
+  const corridorPoint: [number, number] = [clamp(doorway.x + corridorOffset, corridorZone.left + 1, corridorZone.left + corridorZone.width - 1), corridorMidZ];
+  const doorwayPoint: [number, number] = [doorway.x, doorway.z];
+
+  return [pointA, doorwayPoint, corridorPoint, doorwayPoint, pointB];
+}
+
+const WALK_SPEED = 1.25; // world units / second
+
 function StaffMarker({
   staffMember,
   selected,
@@ -181,14 +291,49 @@ function StaffMarker({
   selected: boolean;
   onSelect: (id: string, kind: "resident" | "staff") => void;
 }) {
+  const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
-  const worldX = toWorldX(staffMember.x);
-  const worldZ = toWorldZ(staffMember.y);
   const color = staffStatusHex[staffMember.status];
   const isOverloaded = staffMember.status === "overloaded";
 
+  const waypoints = useMemo(
+    () => buildStaffPatrol(staffMember).map(([x, y]): [number, number] => [toWorldX(x), toWorldZ(y)]),
+    [staffMember]
+  );
+  const motion = useRef({ target: 1, pause: seededFloat(staffMember.id + "p") * 3 });
+
+  useFrame((state, delta) => {
+    const group = groupRef.current;
+    if (!group || waypoints.length < 2) return;
+
+    if (motion.current.pause > 0) {
+      motion.current.pause -= delta;
+      group.position.y = 0;
+      return;
+    }
+
+    const [tx, tz] = waypoints[motion.current.target % waypoints.length];
+    const dx = tx - group.position.x;
+    const dz = tz - group.position.z;
+    const dist = Math.hypot(dx, dz);
+
+    if (dist < 0.08) {
+      motion.current.target += 1;
+      motion.current.pause = 1.2 + seededFloat(staffMember.id + motion.current.target) * 2.2;
+      group.position.y = 0;
+      return;
+    }
+
+    const nx = dx / dist;
+    const nz = dz / dist;
+    const step = Math.min(dist, WALK_SPEED * delta);
+    group.position.x += nx * step;
+    group.position.z += nz * step;
+    group.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 9)) * 0.035;
+  });
+
   return (
-    <group position={[worldX, 0, worldZ]}>
+    <group ref={groupRef} position={[waypoints[0][0], 0, waypoints[0][1]]}>
       {isOverloaded && <PulseRing color="#c2622b" radius={0.32} />}
       {selected && <SelectRing radius={0.4} />}
       <mesh
@@ -287,8 +432,19 @@ function SceneContents({
         infiniteGrid={false}
       />
 
-      {wingZones.map((z) => (
-        <WingPad key={z.wing} zone={z} />
+      {wardZones.map((z) => (
+        <ZonePad key={z.key} zone={z} sublabel="Ward" />
+      ))}
+      <ZonePad zone={corridorZone} showStripe />
+      {serviceZones.map((z) => (
+        <ZonePad key={z.key} zone={z} />
+      ))}
+
+      {Object.entries(wardDoorways).map(([wing, d]) => (
+        <DoorSwing key={wing} x={d.x} z={d.z} rotationY={-Math.PI / 2} />
+      ))}
+      {serviceDoorways.map((d, i) => (
+        <DoorSwing key={i} x={d.x} z={d.z} rotationY={d.rotationY} />
       ))}
 
       {residents.map((r) => (
@@ -318,7 +474,7 @@ export default function FloorMap3D({
 
   return (
     <div className="relative w-full aspect-[16/10] overflow-hidden rounded-2xl bg-gradient-to-b from-ink-100 to-ink-50">
-      <Canvas shadows camera={{ position: [0, 15.5, 15.5], fov: 40 }} dpr={[1, 2]}>
+      <Canvas shadows camera={{ position: [0, 16, 16], fov: 40 }} dpr={[1, 2]}>
         <SceneContents residents={residents} staffList={staffList} selectedId={selectedId} onSelect={onSelect} />
         <OrbitControls
           ref={controlsRef}
@@ -326,7 +482,7 @@ export default function FloorMap3D({
           enableDamping
           dampingFactor={0.08}
           minDistance={9}
-          maxDistance={26}
+          maxDistance={28}
           maxPolarAngle={1.15}
           minPolarAngle={0.35}
           enablePan={false}
