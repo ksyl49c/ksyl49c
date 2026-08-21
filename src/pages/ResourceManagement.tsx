@@ -73,11 +73,15 @@ export default function ResourceManagement() {
         <div className="space-y-5 min-w-0">
           <Card padded={false} className="overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-3 p-4 pb-0">
-              <div className="flex items-center gap-4 text-xs text-ink-500">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink-500">
                 <LegendDot color="bg-rose-500" label="Needs help" />
                 <LegendDot color="bg-moss-500" label="Staff available" />
                 <LegendDot color="bg-sky-500" label="Staff w/ resident" />
                 <LegendDot color="bg-clay-600" label="Staff overloaded" />
+                <span className="flex items-center gap-1.5 text-ink-400">
+                  <span className="h-2.5 w-2.5 rounded-full bg-ink-300" /> Resident
+                  <span className="h-2.5 w-2.5 rounded-[3px] bg-ink-300 ml-1.5" /> Staff
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge tone="clay">{overloaded.length} staff overloaded</Badge>

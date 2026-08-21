@@ -3,7 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Html, Edges, Grid, ContactShadows } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
-import { HandHelping, User2, RotateCcw } from "lucide-react";
+import { HandHelping, RotateCcw } from "lucide-react";
 import clsx from "clsx";
 import type { Resident, StaffMember, Wing } from "../lib/mockData";
 
@@ -69,6 +69,29 @@ const serviceDoorways: { x: number; z: number; rotationY: number }[] = [
   { x: 24.5, z: 58, rotationY: Math.PI / 2 },
   { x: 73.5, z: 58, rotationY: Math.PI / 2 },
 ];
+
+// Decorative kitchen/canteen presence so those service rooms don't read as
+// empty. These are map dressing only — not tied to the real staff/resident
+// rosters, so they never touch the capacity tracker or alert lists.
+const kitchenStaffFillers: { id: string; name: string; points: [number, number][] }[] = [
+  { id: "filler-kitchen-1", name: "Rosa Delgado", points: [[10, 65], [23, 84], [39, 70]] },
+  { id: "filler-kitchen-2", name: "Ben Okoro", points: [[41, 88], [16, 78], [30, 62]] },
+];
+
+const canteenResidentFillers: { id: string; name: string; x: number; y: number }[] = [
+  { id: "filler-canteen-1", name: "Otis Grant", x: 60, y: 68 },
+  { id: "filler-canteen-2", name: "Nadia Farouk", x: 76, y: 79 },
+  { id: "filler-canteen-3", name: "Wilfred Combe", x: 88, y: 65 },
+];
+
+function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 const staffStatusHex: Record<StaffMember["status"], string> = {
   available: "#5a8548",
@@ -218,6 +241,7 @@ function ResidentMarker({
         </mesh>
         <Html position={[0, 0.42, 0]} center zIndexRange={[10, 0]}>
           <div
+            title={`${resident.name} · Resident`}
             onClick={(e) => {
               e.stopPropagation();
               onSelect(resident.id, "resident");
@@ -231,13 +255,20 @@ function ResidentMarker({
               document.body.style.cursor = "auto";
             }}
             className={clsx(
-              "flex cursor-pointer items-center gap-1 rounded-full border-2 border-white pl-1 pr-2 py-0.5 text-[10px] font-bold text-white shadow-md transition-transform",
+              "flex cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-md transition-transform text-[10px] font-bold text-white",
+              resident.needsHelp ? "gap-1 pl-1.5 pr-2.5 py-1" : "h-6 w-6",
               hovered && "scale-110",
               resident.needsHelp ? "bg-rose-500" : resident.deteriorationRisk > 65 ? "bg-clay-600" : "bg-ink-500"
             )}
           >
-            {resident.needsHelp ? <HandHelping size={11} /> : <span className="h-4 w-4 flex items-center justify-center">{resident.photoInitials.slice(0, 1)}</span>}
-            {resident.needsHelp && <span className="whitespace-nowrap">Help</span>}
+            {resident.needsHelp ? (
+              <>
+                <HandHelping size={11} />
+                <span className="whitespace-nowrap">Help</span>
+              </>
+            ) : (
+              resident.photoInitials.slice(0, 2)
+            )}
           </div>
         </Html>
       </group>
@@ -359,6 +390,7 @@ function StaffMarker({
       </mesh>
       <Html position={[0, 0.24, 0]} center zIndexRange={[9, 0]}>
         <div
+          title={`${staffMember.name} · ${staffMember.role}`}
           onClick={(e) => {
             e.stopPropagation();
             onSelect(staffMember.id, "staff");
@@ -372,14 +404,125 @@ function StaffMarker({
             document.body.style.cursor = "auto";
           }}
           className={clsx(
-            "flex h-5 w-5 cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-sm transition-transform",
+            "flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border-2 border-white shadow-sm transition-transform text-[9px] font-bold text-white",
             hovered && "scale-125"
           )}
           style={{ backgroundColor: color }}
         >
-          <User2 size={10} className="text-white" />
+          {initialsOf(staffMember.name)}
         </div>
       </Html>
+    </group>
+  );
+}
+
+function KitchenStaffFillerMarker({ filler }: { filler: (typeof kitchenStaffFillers)[number] }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
+  const waypoints = useMemo(() => filler.points.map(([x, y]): [number, number] => [toWorldX(x), toWorldZ(y)]), [filler]);
+  const motion = useRef({ target: 1, pause: seededFloat(filler.id + "p") * 3 });
+
+  useFrame((state, delta) => {
+    const group = groupRef.current;
+    if (!group) return;
+    if (motion.current.pause > 0) {
+      motion.current.pause -= delta;
+      group.position.y = 0;
+      return;
+    }
+    const [tx, tz] = waypoints[motion.current.target % waypoints.length];
+    const dx = tx - group.position.x;
+    const dz = tz - group.position.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist < 0.08) {
+      motion.current.target += 1;
+      motion.current.pause = 1.5 + seededFloat(filler.id + motion.current.target) * 2.5;
+      group.position.y = 0;
+      return;
+    }
+    const nx = dx / dist;
+    const nz = dz / dist;
+    const step = Math.min(dist, WALK_SPEED * 0.85 * delta);
+    group.position.x += nx * step;
+    group.position.z += nz * step;
+    group.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 9)) * 0.035;
+  });
+
+  return (
+    <group ref={groupRef} position={[waypoints[0][0], 0, waypoints[0][1]]}>
+      <mesh
+        position={[0, 0.24, 0]}
+        scale={hovered ? 1.2 : 1}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = "default";
+        }}
+        onPointerOut={() => setHovered(false)}
+      >
+        <sphereGeometry args={[0.15, 18, 18]} />
+        <meshStandardMaterial color={staffStatusHex.available} roughness={0.4} />
+      </mesh>
+      <Html position={[0, 0.24, 0]} center zIndexRange={[9, 0]}>
+        <div
+          title={`${filler.name} · Kitchen`}
+          className={clsx(
+            "flex h-6 w-6 items-center justify-center rounded-md border-2 border-white shadow-sm transition-transform text-[9px] font-bold text-white",
+            hovered && "scale-125"
+          )}
+          style={{ backgroundColor: staffStatusHex.available }}
+        >
+          {initialsOf(filler.name)}
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+function CanteenResidentFillerMarker({ filler }: { filler: (typeof canteenResidentFillers)[number] }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
+  const worldX = toWorldX(filler.x);
+  const worldZ = toWorldZ(filler.y);
+  const phase = useMemo(() => worldX * 3.1, [worldX]);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    groupRef.current.position.y = 0.5 + Math.sin(state.clock.elapsedTime * 1.3 + phase) * 0.03;
+  });
+
+  return (
+    <group position={[worldX, 0, worldZ]}>
+      <group ref={groupRef} position={[0, 0.5, 0]} scale={hovered ? 1.15 : 1}>
+        <mesh
+          castShadow
+          position={[0, -0.27, 0]}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            setHovered(true);
+            document.body.style.cursor = "default";
+          }}
+          onPointerOut={() => setHovered(false)}
+        >
+          <cylinderGeometry args={[0.045, 0.045, 0.46, 8]} />
+          <meshStandardMaterial color="#6b7b70" roughness={0.6} />
+        </mesh>
+        <mesh castShadow>
+          <sphereGeometry args={[0.2, 20, 20]} />
+          <meshStandardMaterial color="#6b7b70" roughness={0.35} metalness={0.05} />
+        </mesh>
+        <Html position={[0, 0.42, 0]} center zIndexRange={[10, 0]}>
+          <div
+            title={`${filler.name} · Canteen`}
+            className={clsx(
+              "flex h-6 w-6 items-center justify-center rounded-full border-2 border-white shadow-md transition-transform text-[10px] font-bold text-white bg-ink-500",
+              hovered && "scale-110"
+            )}
+          >
+            {initialsOf(filler.name)}
+          </div>
+        </Html>
+      </group>
     </group>
   );
 }
@@ -452,6 +595,12 @@ function SceneContents({
       ))}
       {staffList.map((s) => (
         <StaffMarker key={s.id} staffMember={s} selected={selectedId === s.id} onSelect={onSelect} />
+      ))}
+      {kitchenStaffFillers.map((f) => (
+        <KitchenStaffFillerMarker key={f.id} filler={f} />
+      ))}
+      {canteenResidentFillers.map((f) => (
+        <CanteenResidentFillerMarker key={f.id} filler={f} />
       ))}
 
       <ContactShadows position={[0, 0.001, 0]} opacity={0.3} scale={30} blur={2.6} far={6} />
