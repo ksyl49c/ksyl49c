@@ -1,6 +1,6 @@
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Html, Edges, Grid, ContactShadows } from "@react-three/drei";
+import { OrbitControls, Html, Edges, Grid, ContactShadows, useGLTF } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { HandHelping, User2, RotateCcw, Building2 } from "lucide-react";
@@ -74,9 +74,43 @@ function WingLabel({ zone }: { zone: (typeof wingZones)[number] }) {
   );
 }
 
+// Real, authored glTF furniture — generated once via GLTFExporter and checked
+// into public/models, loaded through the standard useGLTF/GLTFLoader pipeline.
+const MODEL_URLS = {
+  bed: "/models/bed.glb",
+  nightstand: "/models/nightstand.glb",
+  wardrobe: "/models/wardrobe.glb",
+  chair: "/models/chair.glb",
+} as const;
+Object.values(MODEL_URLS).forEach((url) => useGLTF.preload(url));
+
+// glTF scenes are cached by useGLTF and must be cloned per placement — reusing
+// the same Object3D in multiple spots would only render it in the last one.
+// Shadow flags aren't part of the glTF spec, so they're set after cloning.
+function useFurniture(url: string) {
+  const { scene } = useGLTF(url);
+  return useMemo(() => {
+    const clone = scene.clone(true);
+    clone.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
+    });
+    return clone;
+  }, [scene]);
+}
+
+const BED_SIZE = { w: 0.85, d: 1.35 };
+
 // A single room: floor plate, three walls (south side left open as the doorway), and
-// simple bed + nightstand furniture for occupied rooms.
+// glTF-modeled furniture (bed, nightstand, wardrobe, chair) for occupied rooms.
 function RoomBox({ placement, wingEdge, wingFloorColor }: { placement: RoomPlacement; wingEdge: string; wingFloorColor: string }) {
+  const bedModel = useFurniture(MODEL_URLS.bed);
+  const nightstandModel = useFurniture(MODEL_URLS.nightstand);
+  const wardrobeModel = useFurniture(MODEL_URLS.wardrobe);
+  const chairModel = useFurniture(MODEL_URLS.chair);
+
   const { room, rectPct } = placement;
   const x1 = toWorldX(rectPct.left);
   const x2 = toWorldX(rectPct.left + rectPct.width);
@@ -92,10 +126,11 @@ function RoomBox({ placement, wingEdge, wingFloorColor }: { placement: RoomPlace
   const floorColor = room.status === "occupied" ? wingFloorColor : roomStatusFloorHex[room.status] ?? wingFloorColor;
   const showBed = room.status === "occupied";
 
-  const bedWidth = Math.min(0.85, width * 0.5);
-  const bedDepth = Math.min(1.35, depth * 0.48);
+  const furnitureScale = Math.min(1, (width * 0.85) / BED_SIZE.w, (depth * 0.55) / BED_SIZE.d);
   const bedX = centerX - width * 0.14;
-  const bedZ = z1 + bedDepth / 2 + 0.14;
+  const bedZ = z1 + (BED_SIZE.d * furnitureScale) / 2 + 0.14;
+  const wardrobeFits = width > 1.5 && depth > 1.8;
+  const chairFits = wardrobeFits && depth > 2.2;
 
   return (
     <group>
@@ -121,25 +156,15 @@ function RoomBox({ placement, wingEdge, wingFloorColor }: { placement: RoomPlace
       </mesh>
 
       {showBed && (
-        <group position={[bedX, 0, bedZ]}>
-          <mesh castShadow receiveShadow position={[0, 0.21, 0]}>
-            <boxGeometry args={[bedWidth, 0.22, bedDepth]} />
-            <meshStandardMaterial color="#9dbd8f" roughness={0.8} />
-          </mesh>
-          <mesh castShadow position={[0, 0.31, -bedDepth / 2]}>
-            <boxGeometry args={[bedWidth, 0.42, 0.05]} />
-            <meshStandardMaterial color="#b08968" roughness={0.7} />
-          </mesh>
-          <mesh castShadow position={[0, 0.36, -bedDepth * 0.32]}>
-            <boxGeometry args={[bedWidth * 0.75, 0.08, bedDepth * 0.28]} />
-            <meshStandardMaterial color="#fdfcf9" roughness={0.9} />
-          </mesh>
-          <mesh castShadow receiveShadow position={[bedWidth / 2 + 0.19, 0.16, -bedDepth / 2 + 0.14]}>
-            <boxGeometry args={[0.28, 0.32, 0.28]} />
-            <meshStandardMaterial color="#c8a27a" roughness={0.75} />
-          </mesh>
+        <group position={[bedX, 0, bedZ]} scale={furnitureScale}>
+          <primitive object={bedModel} />
+          <primitive object={nightstandModel} position={[BED_SIZE.w / 2 + 0.19, 0, -BED_SIZE.d / 2 + 0.14]} />
         </group>
       )}
+      {showBed && wardrobeFits && (
+        <primitive object={wardrobeModel} position={[x2 - 0.28, 0, z2 - 0.42]} rotation={[0, -Math.PI / 2, 0]} />
+      )}
+      {showBed && chairFits && <primitive object={chairModel} position={[centerX + width * 0.08, 0, z2 - 0.32]} />}
 
       {!room.isFiller && (
         <Html position={[x1 + 0.12, 0.12, z2 - 0.12]} style={{ pointerEvents: "none" }} zIndexRange={[8, 0]}>
@@ -233,6 +258,42 @@ function ResidentMarker({
   );
 }
 
+// Deterministic pseudo-random float in [0,1) from a string seed, so each staff
+// member's patrol pattern is stable across re-renders and floor round-trips.
+function seededFloat(seed: string): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return (h % 10000) / 10000;
+}
+
+// A patrol loop of 2-4 room centers within the staff member's own wing, so
+// movement reads as "walking between resident rooms" rather than wandering.
+function buildPatrolWaypoints(staffMember: StaffMember): [number, number][] {
+  const centers = getFloorLayout(staffMember.floor)
+    .filter((p) => p.room.wing === staffMember.wing)
+    .map((p): [number, number] => [
+      toWorldX(p.rectPct.left + p.rectPct.width / 2),
+      toWorldZ(p.rectPct.top + p.rectPct.height / 2),
+    ]);
+
+  if (centers.length < 2) {
+    const zone = wingZones.find((z) => z.wing === staffMember.wing)!;
+    return [
+      [toWorldX(zone.left + zone.width * 0.25), toWorldZ(zone.top + zone.height * 0.25)],
+      [toWorldX(zone.left + zone.width * 0.75), toWorldZ(zone.top + zone.height * 0.75)],
+    ];
+  }
+
+  const seed = seededFloat(staffMember.id);
+  const start = Math.floor(seed * centers.length);
+  const count = Math.min(4, centers.length);
+  const picked: [number, number][] = [];
+  for (let i = 0; i < count; i++) picked.push(centers[(start + i * 2) % centers.length]);
+  return picked;
+}
+
+const WALK_SPEED = 1.25; // world units / second
+
 function StaffMarker({
   staffMember,
   selected,
@@ -242,14 +303,46 @@ function StaffMarker({
   selected: boolean;
   onSelect: (id: string, kind: "resident" | "staff") => void;
 }) {
+  const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
-  const worldX = toWorldX(staffMember.x);
-  const worldZ = toWorldZ(staffMember.y);
   const color = staffStatusHex[staffMember.status];
   const isOverloaded = staffMember.status === "overloaded";
 
+  const waypoints = useMemo(() => buildPatrolWaypoints(staffMember), [staffMember]);
+  const motion = useRef({ target: 1, pause: seededFloat(staffMember.id + "p") * 3 });
+
+  useFrame((state, delta) => {
+    const group = groupRef.current;
+    if (!group || waypoints.length < 2) return;
+
+    if (motion.current.pause > 0) {
+      motion.current.pause -= delta;
+      group.position.y = 0;
+      return;
+    }
+
+    const [tx, tz] = waypoints[motion.current.target % waypoints.length];
+    const dx = tx - group.position.x;
+    const dz = tz - group.position.z;
+    const dist = Math.hypot(dx, dz);
+
+    if (dist < 0.08) {
+      motion.current.target += 1;
+      motion.current.pause = 1.5 + seededFloat(staffMember.id + motion.current.target) * 2.5;
+      group.position.y = 0;
+      return;
+    }
+
+    const nx = dx / dist;
+    const nz = dz / dist;
+    const step = Math.min(dist, WALK_SPEED * delta);
+    group.position.x += nx * step;
+    group.position.z += nz * step;
+    group.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 9)) * 0.035;
+  });
+
   return (
-    <group position={[worldX, 0, worldZ]}>
+    <group ref={groupRef} position={[waypoints[0][0], 0, waypoints[0][1]]}>
       {isOverloaded && <PulseRing color="#c2622b" radius={0.32} />}
       {selected && <SelectRing radius={0.4} />}
       <mesh
@@ -462,7 +555,9 @@ export default function FloorMap3D({
   return (
     <div className="relative w-full aspect-[16/10] overflow-hidden rounded-2xl bg-gradient-to-b from-ink-100 to-ink-50">
       <Canvas shadows camera={{ position: [0, 13, 13], fov: 42 }} dpr={[1, 2]}>
-        <SceneContents floor={activeFloor} residents={floorResidents} staffList={floorStaff} selectedId={selectedId} onSelect={onSelect} />
+        <Suspense fallback={null}>
+          <SceneContents floor={activeFloor} residents={floorResidents} staffList={floorStaff} selectedId={selectedId} onSelect={onSelect} />
+        </Suspense>
         <OrbitControls
           ref={controlsRef}
           makeDefault

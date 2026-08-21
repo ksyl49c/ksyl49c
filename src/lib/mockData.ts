@@ -330,20 +330,83 @@ export const familyDrafts: Record<string, string> = {
   f5: "Hi Marco — quick update on Josephine this week. She's been more active in the mornings and enjoyed gardening group twice. We did note a couple of instances of her walking toward the east exit, which our team responded to promptly — we've adjusted supervision during that time window as a precaution. No safety concerns at this time. Let us know if you'd like to discuss.",
 };
 
+export interface ActionItem {
+  action: string;
+  owner: string;
+  timeframe: string;
+}
+
 export interface RiskEntry {
   residentId: string;
   hospitalizationRisk: number; // 0-100
   readmissionRisk: number; // 0-100
   primaryDrivers: string[];
   trend: "up" | "down" | "flat";
+  actionPlan: ActionItem[];
 }
 
 export const riskEntries: RiskEntry[] = [
-  { residentId: "r1", hospitalizationRisk: 71, readmissionRisk: 58, primaryDrivers: ["Worsening pressure injury", "Declining nutrition intake", "Elevated pain scores"], trend: "up" },
-  { residentId: "r7", hospitalizationRisk: 66, readmissionRisk: 74, primaryDrivers: ["Post-fracture recovery", "SpO2 drift", "UTI recurrence history"], trend: "up" },
-  { residentId: "r4", hospitalizationRisk: 54, readmissionRisk: 41, primaryDrivers: ["Recent fall", "COPD exacerbation risk", "Reduced oral intake"], trend: "up" },
-  { residentId: "r9", hospitalizationRisk: 38, readmissionRisk: 29, primaryDrivers: ["CKD stage 3 monitoring", "Sleep fragmentation"], trend: "flat" },
-  { residentId: "r5", hospitalizationRisk: 22, readmissionRisk: 18, primaryDrivers: ["Wandering risk", "Anxiety episodes"], trend: "down" },
+  {
+    residentId: "r1",
+    hospitalizationRisk: 71,
+    readmissionRisk: 58,
+    primaryDrivers: ["Worsening pressure injury", "Declining nutrition intake", "Elevated pain scores"],
+    trend: "up",
+    actionPlan: [
+      { action: "Escalate wound care nurse review", owner: "Wound care nurse", timeframe: "Within 24h" },
+      { action: "Increase repositioning schedule to 2-hourly", owner: "Care team", timeframe: "Immediate" },
+      { action: "Refer to dietitian for 3-day intake decline", owner: "Dietitian", timeframe: "Within 48h" },
+      { action: "Reassess PRN analgesia effectiveness next round", owner: "RN on shift", timeframe: "Next round" },
+    ],
+  },
+  {
+    residentId: "r7",
+    hospitalizationRisk: 66,
+    readmissionRisk: 74,
+    primaryDrivers: ["Post-fracture recovery", "SpO2 drift", "UTI recurrence history"],
+    trend: "up",
+    actionPlan: [
+      { action: "Order repeat urinalysis to rule out UTI recurrence", owner: "RN on shift", timeframe: "Within 24h" },
+      { action: "Schedule GP review for SpO2 downward trend", owner: "GP / attending physician", timeframe: "Within 48h" },
+      { action: "Continue assisted mobility per post-fracture physio plan", owner: "Physiotherapist", timeframe: "Ongoing" },
+      { action: "Increase vitals checks to every 4 hours", owner: "Care team", timeframe: "Immediate" },
+    ],
+  },
+  {
+    residentId: "r4",
+    hospitalizationRisk: 54,
+    readmissionRisk: 41,
+    primaryDrivers: ["Recent fall", "COPD exacerbation risk", "Reduced oral intake"],
+    trend: "up",
+    actionPlan: [
+      { action: "Complete fall-risk reassessment; consider bed alarm", owner: "RN on shift", timeframe: "Within 24h" },
+      { action: "Monitor respiratory status for COPD exacerbation signs", owner: "Care team", timeframe: "Ongoing" },
+      { action: "Encourage fluids and nutrition supplement", owner: "Care team", timeframe: "Immediate" },
+      { action: "Physio referral for gait instability", owner: "Physiotherapist", timeframe: "Within 1 week" },
+    ],
+  },
+  {
+    residentId: "r9",
+    hospitalizationRisk: 38,
+    readmissionRisk: 29,
+    primaryDrivers: ["CKD stage 3 monitoring", "Sleep fragmentation"],
+    trend: "flat",
+    actionPlan: [
+      { action: "Continue routine renal panel per CKD protocol", owner: "RN on shift", timeframe: "Next scheduled" },
+      { action: "Review evening routine to reduce night wake events", owner: "Care team", timeframe: "Within 1 week" },
+    ],
+  },
+  {
+    residentId: "r5",
+    hospitalizationRisk: 22,
+    readmissionRisk: 18,
+    primaryDrivers: ["Wandering risk", "Anxiety episodes"],
+    trend: "down",
+    actionPlan: [
+      { action: "Reinforce supervised-hours schedule near exits", owner: "Care team", timeframe: "Ongoing" },
+      { action: "Add evening engagement activity to ease anxiety-driven wandering", owner: "Activities coordinator", timeframe: "Within 1 week" },
+    ],
+  },
 ];
 
 export interface CarePlanEffectiveness {
