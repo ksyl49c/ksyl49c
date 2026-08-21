@@ -1,4 +1,4 @@
-// Mock data for the Meridian prototype. Deterministic, hand-authored — no backend.
+// Mock data for the Aevitas prototype. Deterministic, hand-authored — no backend.
 
 export type Wing = "Magnolia" | "Birchwood" | "Cedar" | "Willow";
 

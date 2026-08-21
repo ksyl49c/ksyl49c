@@ -37,7 +37,7 @@ export default function FamilyCommunication() {
       <SectionHeading
         eyebrow="Family & Communication"
         title="Keep families informed, without the admin load"
-        description="Meridian drafts family updates directly from care documentation and suggests responses to family queries — staff review and send in one tap."
+        description="Aevitas drafts family updates directly from care documentation and suggests responses to family queries — staff review and send in one tap."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5">

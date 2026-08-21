@@ -84,7 +84,7 @@ export default function VoiceDocumentation() {
       <SectionHeading
         eyebrow="Voice-First Documentation"
         title="Speak it once, it files itself"
-        description="Nurses narrate observations, handovers, and care interactions on the floor. Meridian transcribes in real time and structures the output into the right clinical and safety records automatically."
+        description="Nurses narrate observations, handovers, and care interactions on the floor. Aevitas transcribes in real time and structures the output into the right clinical and safety records automatically."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5">

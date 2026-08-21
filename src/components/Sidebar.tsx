@@ -31,7 +31,7 @@ export default function Sidebar() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-moss-600 text-white">
           <Leaf size={17} strokeWidth={2.25} />
         </div>
-        <div className="font-display text-lg text-ink-900 tracking-tight">Meridian</div>
+        <div className="font-display text-lg text-ink-900 tracking-tight">Aevitas</div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-2 scrollbar-thin">

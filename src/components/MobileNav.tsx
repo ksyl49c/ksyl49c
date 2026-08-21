@@ -20,7 +20,7 @@ export default function MobileNav() {
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-moss-600 text-white shrink-0">
           <Leaf size={15} strokeWidth={2.25} />
         </div>
-        <div className="font-display text-base text-ink-900 shrink-0 mr-1">Meridian</div>
+        <div className="font-display text-base text-ink-900 shrink-0 mr-1">Aevitas</div>
       </div>
       <div className="flex gap-1 overflow-x-auto px-3 pb-2.5 scrollbar-thin">
         {nav.map((item) => (
