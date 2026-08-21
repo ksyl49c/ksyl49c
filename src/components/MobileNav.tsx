@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutGrid, Mic, Radar, HeartPulse, ShieldCheck, MessageCircleHeart, PackageSearch, Sparkles, Leaf } from "lucide-react";
+import { LayoutGrid, Mic, Radar, HeartPulse, ShieldCheck, MessageCircleHeart, PackageSearch, Bot, Sparkles, Leaf } from "lucide-react";
 import clsx from "clsx";
 
 const nav = [
@@ -10,6 +10,7 @@ const nav = [
   { to: "/compliance", label: "Compliance", icon: ShieldCheck },
   { to: "/family", label: "Family", icon: MessageCircleHeart },
   { to: "/operations", label: "Operations", icon: PackageSearch },
+  { to: "/robots", label: "Robots", icon: Bot },
   { to: "/predictive", label: "Predictive", icon: Sparkles },
 ];
 

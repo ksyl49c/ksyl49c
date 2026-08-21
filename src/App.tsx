@@ -8,6 +8,7 @@ import ResidentMonitoring from "./pages/ResidentMonitoring";
 import ComplianceAudit from "./pages/ComplianceAudit";
 import FamilyCommunication from "./pages/FamilyCommunication";
 import Operations from "./pages/Operations";
+import RobotManagement from "./pages/RobotManagement";
 import PredictiveIntelligence from "./pages/PredictiveIntelligence";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/compliance" element={<ComplianceAudit />} />
               <Route path="/family" element={<FamilyCommunication />} />
               <Route path="/operations" element={<Operations />} />
+              <Route path="/robots" element={<RobotManagement />} />
               <Route path="/predictive" element={<PredictiveIntelligence />} />
             </Routes>
           </main>

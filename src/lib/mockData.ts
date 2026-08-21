@@ -440,6 +440,61 @@ export const staffDemandForecast: StaffDemandPoint[] = [
   { day: "Sun", predictedNeed: 17, scheduled: 15 },
 ];
 
+export interface RobotUnit {
+  id: string;
+  name: string;
+  type: "Delivery" | "Disinfection" | "Telepresence";
+  status: "on-mission" | "charging" | "idle" | "returning" | "error";
+  batteryPct: number;
+  wing: Wing;
+  floor: Floor;
+  currentMission?: string;
+  missionsToday: number;
+  distanceKm: number;
+  lastServiced: string;
+}
+
+export const robots: RobotUnit[] = [
+  { id: "rb1", name: "Courier-1", type: "Delivery", status: "on-mission", batteryPct: 72, wing: "Magnolia", floor: 1, currentMission: "Delivering medication tray to M-104", missionsToday: 14, distanceKm: 3.8, lastServiced: "6 days ago" },
+  { id: "rb2", name: "Courier-2", type: "Delivery", status: "charging", batteryPct: 34, wing: "Willow", floor: 1, missionsToday: 11, distanceKm: 3.1, lastServiced: "2 days ago" },
+  { id: "rb3", name: "Sani-1", type: "Disinfection", status: "on-mission", batteryPct: 58, wing: "Birchwood", floor: 2, currentMission: "UV disinfection cycle — B-208", missionsToday: 6, distanceKm: 1.4, lastServiced: "4 days ago" },
+  { id: "rb4", name: "Sani-2", type: "Disinfection", status: "idle", batteryPct: 91, wing: "Cedar", floor: 1, missionsToday: 5, distanceKm: 1.1, lastServiced: "1 day ago" },
+  { id: "rb5", name: "Rae", type: "Telepresence", status: "on-mission", batteryPct: 45, wing: "Magnolia", floor: 2, currentMission: "Video call — Harold Jensen & family", missionsToday: 8, distanceKm: 0.6, lastServiced: "9 days ago" },
+  { id: "rb6", name: "Theo", type: "Telepresence", status: "error", batteryPct: 12, wing: "Willow", floor: 2, currentMission: "Charging fault detected — needs attention", missionsToday: 3, distanceKm: 0.4, lastServiced: "9 days ago" },
+];
+
+export interface RobotMission {
+  id: string;
+  robotId: string;
+  summary: string;
+  status: "completed" | "in-progress" | "queued" | "failed";
+  timestamp: string;
+}
+
+export const robotMissions: RobotMission[] = [
+  { id: "rm-1", robotId: "rb1", summary: "Delivering medication tray to M-104", status: "in-progress", timestamp: "Now" },
+  { id: "rm-2", robotId: "rb3", summary: "UV disinfection cycle — B-208", status: "in-progress", timestamp: "Now" },
+  { id: "rm-3", robotId: "rb5", summary: "Video call — Harold Jensen & family", status: "in-progress", timestamp: "Now" },
+  { id: "rm-4", robotId: "rb1", summary: "Delivered breakfast tray to M-112", status: "completed", timestamp: "8 min ago" },
+  { id: "rm-5", robotId: "rb3", summary: "UV disinfection cycle — C-305", status: "completed", timestamp: "22 min ago" },
+  { id: "rm-6", robotId: "rb5", summary: "Video call — Margaret Osei & family", status: "completed", timestamp: "40 min ago" },
+  { id: "rm-7", robotId: "rb6", summary: "Charging fault detected while docking", status: "failed", timestamp: "5 min ago" },
+  { id: "rm-8", robotId: "rb4", summary: "Evening disinfection round — Cedar wing", status: "queued", timestamp: "Scheduled 18:00" },
+  { id: "rm-9", robotId: "rb2", summary: "Deliver supplies to B-201", status: "queued", timestamp: "Scheduled 15 min" },
+];
+
+export const robotPowerMetrics = {
+  kwhToday: 18.4,
+  estCostToday: 3.2,
+  chargingDocksInUse: 2,
+  chargingDocksTotal: 6,
+  fleetUptimePct: 96,
+};
+
+export function robotById(id: string): RobotUnit | undefined {
+  return robots.find((r) => r.id === id);
+}
+
 export function residentById(id: string): Resident | undefined {
   return residents.find((r) => r.id === id);
 }

@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   MessageCircleHeart,
   PackageSearch,
+  Bot,
   Sparkles,
   Leaf,
 } from "lucide-react";
@@ -21,6 +22,7 @@ const nav = [
   { to: "/compliance", label: "Compliance & Audit", icon: ShieldCheck },
   { to: "/family", label: "Family & Communication", icon: MessageCircleHeart },
   { to: "/operations", label: "Operations", icon: PackageSearch },
+  { to: "/robots", label: "Robot Management", icon: Bot },
   { to: "/predictive", label: "Predictive Intelligence", icon: Sparkles },
 ];
 
