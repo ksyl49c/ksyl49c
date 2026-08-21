@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { HandHelping, BatteryWarning, Footprints, Clock, Zap, ArrowRight, CheckCircle2 } from "lucide-react";
 import clsx from "clsx";
 import { Card, Badge, SectionHeading, ProgressBar, Avatar } from "../components/ui/Primitives";
-import FloorMap from "../components/FloorMap";
 import { residents as allResidents, staff as allStaff, type StaffMember, type Resident } from "../lib/mockData";
+
+const FloorMap3D = lazy(() => import("../components/FloorMap3D"));
 
 const statusLabel: Record<StaffMember["status"], string> = {
   available: "Available",
@@ -72,11 +73,15 @@ export default function ResourceManagement() {
         <div className="space-y-5 min-w-0">
           <Card padded={false} className="overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-3 p-4 pb-0">
-              <div className="flex items-center gap-4 text-xs text-ink-500">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink-500">
                 <LegendDot color="bg-rose-500" label="Needs help" />
                 <LegendDot color="bg-moss-500" label="Staff available" />
                 <LegendDot color="bg-sky-500" label="Staff w/ resident" />
                 <LegendDot color="bg-clay-600" label="Staff overloaded" />
+                <span className="flex items-center gap-1.5 text-ink-400">
+                  <span className="h-2.5 w-2.5 rounded-full bg-ink-300" /> Resident
+                  <span className="h-2.5 w-2.5 rounded-[3px] bg-ink-300 ml-1.5" /> Staff
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Badge tone="clay">{overloaded.length} staff overloaded</Badge>
@@ -84,7 +89,9 @@ export default function ResourceManagement() {
               </div>
             </div>
             <div className="p-4">
-              <FloorMap residents={residents} staffList={staffList} selectedId={selected?.id ?? null} onSelect={handleSelect} />
+              <Suspense fallback={<FloorMapSkeleton />}>
+                <FloorMap3D residents={residents} staffList={staffList} selectedId={selected?.id ?? null} onSelect={handleSelect} />
+              </Suspense>
             </div>
           </Card>
 
@@ -212,6 +219,17 @@ export default function ResourceManagement() {
             </div>
           </Card>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FloorMapSkeleton() {
+  return (
+    <div className="flex w-full aspect-[16/10] items-center justify-center rounded-2xl bg-gradient-to-b from-ink-100 to-ink-50">
+      <div className="flex flex-col items-center gap-2 text-ink-400">
+        <div className="h-6 w-6 rounded-full border-2 border-ink-300 border-t-moss-600 animate-spin" />
+        <span className="text-xs font-medium">Loading 3D floor map...</span>
       </div>
     </div>
   );

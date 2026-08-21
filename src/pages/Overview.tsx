@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
-import { Mic, Radar, HeartPulse, ShieldCheck, MessageCircleHeart, PackageSearch, Sparkles, ArrowUpRight, AlertTriangle, HandHelping, BatteryWarning } from "lucide-react";
+import { Mic, Radar, HeartPulse, ShieldCheck, MessageCircleHeart, PackageSearch, Bot, Sparkles, ArrowUpRight, AlertTriangle, HandHelping, BatteryWarning } from "lucide-react";
 import { Card, Badge, StatTile, Avatar } from "../components/ui/Primitives";
-import { residents, staff, incidents, auditItems, familyThreads, residentById } from "../lib/mockData";
+import { residents, staff, incidents, auditItems, familyThreads, robots, residentById } from "../lib/mockData";
 
 const overdue = auditItems.filter((a) => a.status !== "met").length;
 const needHelp = residents.filter((r) => r.needsHelp);
 const overloaded = staff.filter((s) => s.status === "overloaded");
 const openIncidents = incidents.filter((i) => i.status !== "closed");
 const draftsReady = familyThreads.filter((f) => f.status === "draft-ready").length;
+const robotsNeedAttention = robots.filter((r) => r.status === "error").length;
 
 const modules = [
   { to: "/voice", icon: Mic, label: "Voice Documentation", stat: "12 captures today", tone: "moss" as const },
@@ -16,6 +17,7 @@ const modules = [
   { to: "/compliance", icon: ShieldCheck, label: "Compliance & Audit", stat: `${overdue} items need attention`, tone: "amber" as const },
   { to: "/family", icon: MessageCircleHeart, label: "Family & Communication", stat: `${draftsReady} drafts ready to send`, tone: "sky" as const },
   { to: "/operations", icon: PackageSearch, label: "Operations", stat: "2 critical supply items", tone: "clay" as const },
+  { to: "/robots", icon: Bot, label: "Robot Management", stat: `${robotsNeedAttention} robot needs attention`, tone: "rose" as const },
   { to: "/predictive", icon: Sparkles, label: "Predictive Intelligence", stat: "2 rising hospitalization risks", tone: "rose" as const },
 ];
 

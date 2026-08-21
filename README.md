@@ -1,4 +1,4 @@
-# Meridian — Nursing Home Operating System (Prototype)
+# Aevitas — Nursing Home Operating System (Prototype)
 
 A frontend prototype for a care-operations platform for nursing homes, inspired
 by the calm, warm, editorial design language of modern care-tech products.

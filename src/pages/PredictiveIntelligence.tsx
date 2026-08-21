@@ -1,5 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
-import { TrendingUp, TrendingDown, Minus, Ambulance, ClipboardCheck, Users } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Ambulance, ClipboardCheck, Users, ListChecks, User } from "lucide-react";
+import clsx from "clsx";
 import { Card, Badge, SectionHeading, Avatar, ProgressBar } from "../components/ui/Primitives";
 import { riskEntries, carePlanEffectiveness, staffDemandForecast, residentById } from "../lib/mockData";
 
@@ -94,6 +95,57 @@ export default function PredictiveIntelligence() {
           </div>
         </Card>
       </div>
+
+      <Card padded={false} className="mb-5">
+        <div className="p-5 pb-1 flex items-center gap-2">
+          <ListChecks size={17} className="text-clay-600" />
+          <h2 className="font-display text-lg text-ink-900">Recommended action plans</h2>
+        </div>
+        <p className="px-5 text-sm text-ink-500 mb-1 max-w-2xl">
+          Synthesized from each resident's risk drivers into concrete next steps, ranked by hospitalization risk.
+        </p>
+        <div className="divide-y divide-ink-100">
+          {[...riskEntries]
+            .sort((a, b) => b.hospitalizationRisk - a.hospitalizationRisk)
+            .map((r) => {
+              const resident = residentById(r.residentId)!;
+              return (
+                <div key={r.residentId} className="px-5 py-4">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <Avatar initials={resident.photoInitials} size={30} tone={r.hospitalizationRisk > 60 ? "rose" : "amber"} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-semibold text-ink-800">{resident.name}</div>
+                      <div className="text-[11px] text-ink-400">Room {resident.room}</div>
+                    </div>
+                    <Badge tone={r.hospitalizationRisk > 60 ? "rose" : "amber"}>{r.hospitalizationRisk}% hospitalization risk</Badge>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-x-4 gap-y-2 pl-1">
+                    {r.actionPlan.map((item, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span
+                          className={clsx(
+                            "mt-1.5 h-1.5 w-1.5 rounded-full shrink-0",
+                            item.timeframe.toLowerCase().includes("immediate") || item.timeframe.toLowerCase().includes("24h")
+                              ? "bg-rose-500"
+                              : "bg-amber-500"
+                          )}
+                        />
+                        <div className="min-w-0">
+                          <div className="text-[13px] text-ink-700 leading-snug">{item.action}</div>
+                          <div className="flex items-center gap-1 text-[11px] text-ink-400 mt-0.5">
+                            <User size={10} /> {item.owner}
+                            <span className="mx-0.5">&middot;</span>
+                            {item.timeframe}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </Card>
 
       <Card>
         <div className="flex items-center gap-2 mb-1">
