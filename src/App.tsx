@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import MobileNav from "./components/MobileNav";
 import Overview from "./pages/Overview";
@@ -13,7 +13,7 @@ import PredictiveIntelligence from "./pages/PredictiveIntelligence";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="flex min-h-screen bg-cream-100">
         <Sidebar />
         <div className="flex-1 min-w-0 flex flex-col">
@@ -33,6 +33,6 @@ export default function App() {
           </main>
         </div>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
