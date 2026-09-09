@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif;
+
+  --color-cream-50: #fbfcfc;
+  --color-cream-100: #f3f6f6;
+  --color-cream-200: #e7edee;
+
+  --color-ink-900: #151f24;
+  --color-ink-800: #1f2c32;
+  --color-ink-700: #304046;
+  --color-ink-600: #47585e;
+  --color-ink-500: #647579;
+  --color-ink-400: #8b9c9e;
+  --color-ink-300: #b4c1c3;
+  --color-ink-200: #d9e2e3;
+  --color-ink-100: #ecf1f1;
+
+  --color-moss-50: #eef8f7;
+  --color-moss-100: #d5eeea;
+  --color-moss-200: #aedad5;
+  --color-moss-300: #82c8bc;
+  --color-moss-400: #56ad9e;
+  --color-moss-500: #388f80;
+  --color-moss-600: #297166;
+  --color-moss-700: #205a52;
+  --color-moss-800: #1a4842;
+  --color-moss-900: #143835;
+
+  --color-clay-100: #f0e8fb;
+  --color-clay-300: #c6a8ee;
+  --color-clay-500: #9160d6;
+  --color-clay-600: #7548ba;
+  --color-clay-700: #5c3894;
+
+  --color-amber-100: #fdf3d8;
+  --color-amber-300: #f2cf6f;
+  --color-amber-500: #d9a52a;
+  --color-amber-600: #b5871c;
+
+  --color-rose-100: #fbe8e6;
+  --color-rose-300: #eeaba4;
+  --color-rose-500: #d9645a;
+  --color-rose-600: #bd4b41;
+
+  --color-sky-100: #e7f1f7;
+  --color-sky-300: #a9cbe0;
+  --color-sky-500: #5490b8;
+  --color-sky-600: #3d7297;
+
+  --shadow-soft: 0 1px 2px rgba(21, 31, 36, 0.04), 0 8px 24px -12px rgba(21, 31, 36, 0.12);
+  --shadow-card: 0 1px 1px rgba(21, 31, 36, 0.03), 0 2px 12px -4px rgba(21, 31, 36, 0.08);
+  --shadow-lifted: 0 12px 32px -8px rgba(21, 31, 36, 0.18);
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-cream-100);
+  color: var(--color-ink-800);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--color-ink-200);
+    border-radius: 999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .bg-noise {
+    background-image: radial-gradient(circle at 1px 1px, rgba(21, 31, 36, 0.05) 1px, transparent 0);
+    background-size: 18px 18px;
+  }
+}
+
+/* Motion is deliberately gentle and minimal throughout this product — many of the
+   people it supports are sensitive to fast movement, flashing, or visual noise. */
+
+@keyframes pulse-ring-soft {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.animate-pulse-ring {
+  animation: pulse-ring-soft 2.6s ease-out infinite;
+}
+
+@keyframes wave-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+.animate-wave-bar {
+  animation: wave-bar 1.4s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
