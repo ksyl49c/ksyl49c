@@ -208,21 +208,22 @@ export interface TherapyPlan {
   sessionsPlanned: number;
   sessionsAttended: number;
   adherence: number; // 0-100
+  adherenceHistory: number[]; // last 4 review periods, oldest first, ending at `adherence`
   trend: "improving" | "stable" | "declining";
   lastSession: string;
   nextSession: string;
 }
 
 export const therapyPlans: TherapyPlan[] = [
-  { id: "t1", individualId: "p1", discipline: "Positive Behaviour Support", goal: "Reduce shutdown episodes triggered by unplanned changes, via advance-warning strategy", sessionsPlanned: 4, sessionsAttended: 4, adherence: 100, trend: "stable", lastSession: "Aug 14", nextSession: "Sep 11" },
-  { id: "t2", individualId: "p1", discipline: "Occupational Therapy", goal: "Build tolerance to unexpected sensory input in community settings", sessionsPlanned: 4, sessionsAttended: 2, adherence: 50, trend: "declining", lastSession: "Jul 30", nextSession: "Overdue" },
-  { id: "t3", individualId: "p3", discipline: "Speech & Language Therapy", goal: "Expand AAC vocabulary for expressing pain and discomfort", sessionsPlanned: 6, sessionsAttended: 6, adherence: 100, trend: "improving", lastSession: "Aug 19", nextSession: "Sep 2" },
-  { id: "t4", individualId: "p3", discipline: "Positive Behaviour Support", goal: "Function-based plan for self-injurious behaviour around mealtimes", sessionsPlanned: 4, sessionsAttended: 3, adherence: 75, trend: "improving", lastSession: "Aug 10", nextSession: "Sep 7" },
-  { id: "t5", individualId: "p4", discipline: "Psychology", goal: "CBT-informed anxiety management ahead of planned placement review", sessionsPlanned: 6, sessionsAttended: 4, adherence: 67, trend: "stable", lastSession: "Aug 15", nextSession: "Aug 29" },
-  { id: "t6", individualId: "p4", discipline: "Occupational Therapy", goal: "Sensory diet to support regulation before appointments", sessionsPlanned: 3, sessionsAttended: 1, adherence: 33, trend: "declining", lastSession: "Jul 18", nextSession: "Overdue" },
-  { id: "t7", individualId: "p6", discipline: "Physiotherapy", goal: "Postural support and passive movement programme", sessionsPlanned: 8, sessionsAttended: 8, adherence: 100, trend: "stable", lastSession: "Aug 20", nextSession: "Aug 27" },
-  { id: "t8", individualId: "p8", discipline: "Occupational Therapy", goal: "Graded exposure to textured/messy play materials", sessionsPlanned: 4, sessionsAttended: 3, adherence: 75, trend: "improving", lastSession: "Aug 12", nextSession: "Sep 9" },
-  { id: "t9", individualId: "p2", discipline: "Speech & Language Therapy", goal: "Maintain Makaton vocabulary, introduce 5 new signs this quarter", sessionsPlanned: 4, sessionsAttended: 4, adherence: 100, trend: "stable", lastSession: "Aug 6", nextSession: "Sep 3" },
+  { id: "t1", individualId: "p1", discipline: "Positive Behaviour Support", goal: "Reduce shutdown episodes triggered by unplanned changes, via advance-warning strategy", sessionsPlanned: 4, sessionsAttended: 4, adherence: 100, adherenceHistory: [100, 100, 100, 100], trend: "stable", lastSession: "Aug 14", nextSession: "Sep 11" },
+  { id: "t2", individualId: "p1", discipline: "Occupational Therapy", goal: "Build tolerance to unexpected sensory input in community settings", sessionsPlanned: 4, sessionsAttended: 2, adherence: 50, adherenceHistory: [100, 75, 75, 50], trend: "declining", lastSession: "Jul 30", nextSession: "Overdue" },
+  { id: "t3", individualId: "p3", discipline: "Speech & Language Therapy", goal: "Expand AAC vocabulary for expressing pain and discomfort", sessionsPlanned: 6, sessionsAttended: 6, adherence: 100, adherenceHistory: [83, 100, 100, 100], trend: "improving", lastSession: "Aug 19", nextSession: "Sep 2" },
+  { id: "t4", individualId: "p3", discipline: "Positive Behaviour Support", goal: "Function-based plan for self-injurious behaviour around mealtimes", sessionsPlanned: 4, sessionsAttended: 3, adherence: 75, adherenceHistory: [25, 50, 75, 75], trend: "improving", lastSession: "Aug 10", nextSession: "Sep 7" },
+  { id: "t5", individualId: "p4", discipline: "Psychology", goal: "CBT-informed anxiety management ahead of planned placement review", sessionsPlanned: 6, sessionsAttended: 4, adherence: 67, adherenceHistory: [67, 83, 50, 67], trend: "stable", lastSession: "Aug 15", nextSession: "Aug 29" },
+  { id: "t6", individualId: "p4", discipline: "Occupational Therapy", goal: "Sensory diet to support regulation before appointments", sessionsPlanned: 3, sessionsAttended: 1, adherence: 33, adherenceHistory: [100, 67, 33, 33], trend: "declining", lastSession: "Jul 18", nextSession: "Overdue" },
+  { id: "t7", individualId: "p6", discipline: "Physiotherapy", goal: "Postural support and passive movement programme", sessionsPlanned: 8, sessionsAttended: 8, adherence: 100, adherenceHistory: [100, 100, 100, 100], trend: "stable", lastSession: "Aug 20", nextSession: "Aug 27" },
+  { id: "t8", individualId: "p8", discipline: "Occupational Therapy", goal: "Graded exposure to textured/messy play materials", sessionsPlanned: 4, sessionsAttended: 3, adherence: 75, adherenceHistory: [25, 50, 50, 75], trend: "improving", lastSession: "Aug 12", nextSession: "Sep 9" },
+  { id: "t9", individualId: "p2", discipline: "Speech & Language Therapy", goal: "Maintain Makaton vocabulary, introduce 5 new signs this quarter", sessionsPlanned: 4, sessionsAttended: 4, adherence: 100, adherenceHistory: [100, 100, 100, 100], trend: "stable", lastSession: "Aug 6", nextSession: "Sep 3" },
 ];
 
 export interface SensoryProfileEntry {
@@ -303,6 +304,70 @@ export const incidents: IncidentRecord[] = [
   { id: "i3", type: "Safeguarding", individualId: "p4", timestamp: "Yesterday, 19:20", status: "under-review", summary: "Unexplained bruising to left wrist noted during evening support, origin unclear.", severity: "high", reportedBy: "Lucia Fernandez" },
   { id: "i4", type: "Near Miss", individualId: "p8", timestamp: "Aug 18, 14:10", status: "closed", summary: "Attempted to leave activity room unsupervised during fire alarm test; redirected before exit.", severity: "low", reportedBy: "Priya Nair" },
   { id: "i5", type: "Behavioural Escalation", individualId: "p1", timestamp: "Aug 16, 09:30", status: "closed", summary: "Shutdown following last-minute transport change; de-escalated with visual timer, no restrictive practice used.", severity: "low", reportedBy: "Deshawn Marsh" },
+];
+
+// Full behavioural history per person — the ABC (Antecedent-Behaviour-Consequence)
+// record a PBS/psychology team would otherwise keep as a running paper chart,
+// with the de-escalation strategy tried and whether it worked.
+export interface BehaviouralEvent {
+  id: string;
+  individualId: string;
+  date: string;
+  antecedent: string;
+  behaviour: string;
+  strategy: string;
+  outcome: "resolved" | "partially-resolved" | "escalated";
+  restrictivePracticeUsed: boolean;
+  severity: "low" | "moderate" | "high";
+}
+
+export const behaviouralEvents: BehaviouralEvent[] = [
+  // Jamie Whitcombe — queue/waiting trigger emerging and intensifying over ~13 weeks
+  { id: "be1", individualId: "p1", date: "Jun 12", antecedent: "Pickup bus running 10 minutes late, no warning given", behaviour: "Pacing, vocal distress", strategy: "Verbal reassurance + informal time estimate", outcome: "resolved", restrictivePracticeUsed: false, severity: "low" },
+  { id: "be2", individualId: "p1", date: "Jun 29", antecedent: "10-minute queue at pharmacy", behaviour: "Repeated requests to leave, raised voice", strategy: "Visual countdown card (early trial)", outcome: "resolved", restrictivePracticeUsed: false, severity: "low" },
+  { id: "be3", individualId: "p1", date: "Jul 20", antecedent: "20-minute GP waiting room delay, no advance notice", behaviour: "Attempted to leave, brief push past staff member", strategy: "Verbal redirection only", outcome: "partially-resolved", restrictivePracticeUsed: false, severity: "moderate" },
+  { id: "be4", individualId: "p1", date: "Aug 3", antecedent: "8-minute self-checkout queue at supermarket", behaviour: "Shouting, one wall-hit", strategy: "Moved to quieter area + train podcast", outcome: "resolved", restrictivePracticeUsed: false, severity: "moderate" },
+  { id: "be5", individualId: "p1", date: "Aug 16", antecedent: "Last-minute transport change (different bus)", behaviour: "Shutdown, minimal response to staff", strategy: "Visual timer + talking about train routes", outcome: "resolved", restrictivePracticeUsed: false, severity: "low" },
+  { id: "be6", individualId: "p1", date: "Aug 27", antecedent: "12-minute unplanned queue at the post office", behaviour: "Loud vocalisation, tried to push past the queue", strategy: "Visual countdown card", outcome: "partially-resolved", restrictivePracticeUsed: false, severity: "moderate" },
+  { id: "be7", individualId: "p1", date: "Today, 15:40", antecedent: "Unplanned 15+ minute click & collect queue, deviation from planned routine", behaviour: "Repeated exit requests escalating to attempt to leave via fire exit", strategy: "2-person physical guide, then train podcast in the car", outcome: "resolved", restrictivePracticeUsed: true, severity: "moderate" },
+
+  // Noah Fitzgerald — mealtime/transition self-injury, intensity rising, equipment-dependent
+  { id: "be8", individualId: "p3", date: "Aug 12", antecedent: "New/unfamiliar support worker covering the shift", behaviour: "Self-injury (head-hitting) x2, mild", strategy: "Familiar keyworker (Grace) called in", outcome: "resolved", restrictivePracticeUsed: false, severity: "low" },
+  { id: "be9", individualId: "p3", date: "Aug 19", antecedent: "Reduced breakfast intake, transition to therapy room", behaviour: "Self-injury (head-hitting) x4", strategy: "Weighted blanket + AAC device offered to express needs", outcome: "resolved", restrictivePracticeUsed: false, severity: "moderate" },
+  { id: "be10", individualId: "p3", date: "Aug 26", antecedent: "Lunch transition, flickering light at serving hatch", behaviour: "Self-injury (head-hitting) x8, more intense than prior episodes", strategy: "Weighted blanket only — noise-cancelling headphones unavailable (device uncharged)", outcome: "partially-resolved", restrictivePracticeUsed: false, severity: "high" },
+  { id: "be11", individualId: "p3", date: "Sep 2", antecedent: "Unannounced fire alarm test during activity", behaviour: "Self-injury (head-hitting) x3, distress vocalisation", strategy: "Noise-cancelling headphones + weighted blanket", outcome: "resolved", restrictivePracticeUsed: false, severity: "moderate" },
+  { id: "be12", individualId: "p3", date: "Today, 11:05", antecedent: "Loud/flickering sensory environment at lunch transition, reduced food intake this morning", behaviour: "Self-injury (head-hitting) x5-6", strategy: "Weighted blanket + reduced lighting", outcome: "resolved", restrictivePracticeUsed: false, severity: "moderate" },
+
+  // Aisha Rahman — anxiety episodes tied to notice given for changes
+  { id: "be13", individualId: "p4", date: "Aug 5", antecedent: "Group activity with 4 unfamiliar attendees, exceeding her usual max of 3", behaviour: "Left the room abruptly, isolated in bedroom for 2 hours", strategy: "One-to-one time with keyworker offered later", outcome: "resolved", restrictivePracticeUsed: false, severity: "low" },
+  { id: "be14", individualId: "p4", date: "Aug 22", antecedent: "Same-day reminder of upcoming DoLS review meeting (no advance written notice)", behaviour: "Repetitive questioning, escalating to crying", strategy: "Written weekly schedule provided retroactively", outcome: "partially-resolved", restrictivePracticeUsed: false, severity: "moderate" },
+  { id: "be15", individualId: "p4", date: "Sep 3", antecedent: "Unannounced maintenance visitor arrived without notice", behaviour: "Withdrawal, refused to leave room, tearful", strategy: "Written explanation note + drawing materials", outcome: "resolved", restrictivePracticeUsed: false, severity: "low" },
+
+  // Maisie Doyle — transition distress, protocol-dependent
+  { id: "be16", individualId: "p8", date: "Aug 6", antecedent: "Asked to touch play-dough during sensory group with no advance choice given", behaviour: "Refused, hand-flapping distress", strategy: "Fidget toy offered instead, given a choice", outcome: "resolved", restrictivePracticeUsed: false, severity: "low" },
+  { id: "be17", individualId: "p8", date: "Aug 18", antecedent: "Unannounced fire alarm test", behaviour: "Attempted to leave activity room unsupervised, ran toward exit", strategy: "Redirected calmly using a preferred phrase from her favourite film", outcome: "resolved", restrictivePracticeUsed: false, severity: "moderate" },
+  { id: "be18", individualId: "p8", date: "Aug 29", antecedent: "Activity ended abruptly — standard 5-minute visual countdown was skipped", behaviour: "Distress vocalisation, refused to move rooms for 10 minutes", strategy: "Fidget toy + allowed to finish scripting a favourite scene", outcome: "resolved", restrictivePracticeUsed: false, severity: "low" },
+];
+
+// Pattern shifts the system surfaces automatically from the behavioural log —
+// the kind of cross-episode trend a psychology/PBS team would otherwise have
+// to notice by hand-charting paper ABC forms.
+export interface PatternShift {
+  individualId: string;
+  kind: "emerging-trigger" | "strategy-effectiveness" | "frequency-change" | "process-gap";
+  title: string;
+  detail: string;
+  severity: "info" | "watch" | "urgent";
+}
+
+export const patternShifts: PatternShift[] = [
+  { individualId: "p1", kind: "frequency-change", title: "Queue/waiting escalations tripled in 5 weeks", detail: "3 queue-related incidents between Aug 3 and today, versus 0 in the two months before that. This is a newly emerging trigger, not previously named in his PBS plan.", severity: "urgent" },
+  { individualId: "p1", kind: "strategy-effectiveness", title: "Visual countdown card losing effectiveness", detail: "Fully resolved the incident when trialled in June (1 of 1). Only partially effective in August (0 of 1 fully resolved) as queue length and frequency increased. Consider pairing it with pre-booked or skip-queue accommodations rather than relying on the card alone.", severity: "watch" },
+  { individualId: "p1", kind: "process-gap", title: "First use of physical guide follows 6 successful verbal strategies", detail: "Restrictive practice wasn't required in any of the prior 6 logged episodes. Today's use may reflect a genuine rise in severity rather than a failure of technique — recommend PBS review before the next community outing.", severity: "watch" },
+  { individualId: "p3", kind: "strategy-effectiveness", title: "Equipment availability is deciding whether episodes fully resolve", detail: "The one episode that only partially resolved (Aug 26) is also the one where noise-cancelling headphones weren't available. Headphones are currently flagged low-stock in Operations — restocking them may directly reduce escalation severity.", severity: "watch" },
+  { individualId: "p3", kind: "emerging-trigger", title: "Self-injury intensity rising at the same location", detail: "Repetition count has risen from 2 to 8 across the last 5 logged events, all at the lunch serving-hatch. Combined with reduced food intake beforehand, this looks more like unmet physical need than escalation — see the diagnostic overshadowing flag in Predictive Intelligence.", severity: "urgent" },
+  { individualId: "p4", kind: "process-gap", title: "Anxiety episodes follow same-day notice, not advance notice", detail: "2 of the last 3 episodes followed a change communicated on the day itself, despite her communication passport specifying 48h+ written notice. The DoLS review reminder was one of these.", severity: "watch" },
+  { individualId: "p8", kind: "process-gap", title: "Skipped visual countdown precedes most transition distress", detail: "The standard 5-minute visual countdown was skipped ahead of 2 of the last 3 recorded transition-distress episodes, including the fire-alarm near miss. Reinforcing the protocol with relief and agency staff may reduce frequency.", severity: "watch" },
 ];
 
 export interface VoiceCapture {
